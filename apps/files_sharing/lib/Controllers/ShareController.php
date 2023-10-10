@@ -543,9 +543,8 @@ class ShareController extends Controller {
 		/**
 		 * Http range requests support
 		 */
-		$range_header = $this->request->getHeader('Range');
-		if ($range_header !== null) {
-			$server_params['range'] = $range_header;
+		if (isset($_SERVER['HTTP_RANGE'])) {
+			$server_params['range'] = $this->request->getHeader('Range');
 		}
 
 		// download selected files

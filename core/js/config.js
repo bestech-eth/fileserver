@@ -8,62 +8,51 @@
  * @namespace
  */
 OC.AppConfig={
-	url:OC.generateUrl('/settings/appconfig'),
+	url:OC.filePath('core','ajax','appconfig.php'),
+	getCall:function(action,data,callback){
+		data.action=action;
+		$.getJSON(OC.AppConfig.url,data,function(result){
+			if(result.status==='success'){
+				if(callback){
+					callback(result.data);
+				}
+			}
+		});
+	},
+	postCall:function(action,data,callback){
+		data.action=action;
+		return $.post(OC.AppConfig.url,data,function(result){
+			if(result.status==='success'){
+				if(callback){
+					callback(result.data);
+				}
+			}
+		},'json');
+	},
 	getValue:function(app,key,defaultValue,callback){
-		if (defaultValue === undefined || defaultValue === null) {
-			$.ajax({
-				url: `${OC.AppConfig.url}/${app}/${key}`,
-				success: callback
-			});
-		} else {
-			$.ajax({
-				url: `${OC.AppConfig.url}/${app}/${key}?default=${defaultValue}`,
-				success: callback
-			});
+		if(typeof defaultValue=='function'){
+			callback=defaultValue;
+			defaultValue=null;
 		}
+		OC.AppConfig.getCall('getValue',{app:app,key:key,defaultValue:defaultValue},callback);
 	},
 	setValue:function(app,key,value){
-		return $.ajax({
-			url: OC.AppConfig.url,
-			type: 'PUT',
-			data: {
-				app: app,
-				key: key,
-				value: value
-			}
-		});
+		return OC.AppConfig.postCall('setValue',{app:app,key:key,value:value});
 	},
 	getApps:function(callback){
-		$.ajax({
-			url: OC.AppConfig.url,
-			success: callback
-		});
+		OC.AppConfig.getCall('getApps',{},callback);
 	},
 	getKeys:function(app,callback){
-		$.ajax({
-			url: `${OC.AppConfig.url}/${app}`,
-			success: callback
-		});
+		OC.AppConfig.getCall('getKeys',{app:app},callback);
 	},
 	hasKey:function(app,key,callback){
-		$.ajax({
-			url: `${OC.AppConfig.url}/${app}/${key}`,
-			success: function(data) {
-				callback(data !== null);
-			}
-		});
+		OC.AppConfig.getCall('hasKey',{app:app,key:key},callback);
 	},
 	deleteKey:function(app,key){
-		$.ajax({
-			url: `${OC.AppConfig.url}/${app}/${key}`,
-			type: 'DELETE'
-		});
+		OC.AppConfig.postCall('deleteKey',{app:app,key:key});
 	},
 	deleteApp:function(app){
-		$.ajax({
-			url: `${OC.AppConfig.url}/${app}`,
-			type: 'DELETE'
-		});
+		OC.AppConfig.postCall('deleteApp',{app:app});
 	}
 };
 //TODO OC.Preferences

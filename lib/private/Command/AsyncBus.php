@@ -21,23 +21,18 @@
 
 namespace OC\Command;
 
-use Closure;
-use InvalidArgumentException;
-use Laravel\SerializableClosure\SerializableClosure;
-use OCP\BackgroundJob\IJobList;
 use OCP\Command\IBus;
 use OCP\Command\ICommand;
-use function array_search;
-use function class_uses;
-use function is_callable;
-use function serialize;
-use function trim;
+use Opis\Closure\SerializableClosure;
 
 /**
  * Asynchronous command bus that uses the background job system as backend
  */
 class AsyncBus implements IBus {
-	private IJobList $jobList;
+	/**
+	 * @var \OCP\BackgroundJob\IJobList
+	 */
+	private $jobList;
 
 	/**
 	 * List of traits for command which require sync execution
@@ -47,16 +42,16 @@ class AsyncBus implements IBus {
 	private $syncTraits = [];
 
 	/**
-	 * @param IJobList $jobList
+	 * @param \OCP\BackgroundJob\IJobList $jobList
 	 */
-	public function __construct(IJobList $jobList) {
+	public function __construct($jobList) {
 		$this->jobList = $jobList;
 	}
 
 	/**
 	 * Schedule a command to be fired
 	 *
-	 * @param ICommand | callable $command
+	 * @param \OCP\Command\ICommand | callable $command
 	 */
 	public function push($command) {
 		if ($this->canRunAsync($command)) {
@@ -72,11 +67,11 @@ class AsyncBus implements IBus {
 	 * @param string $trait
 	 */
 	public function requireSync($trait) {
-		$this->syncTraits[] = trim($trait, '\\');
+		$this->syncTraits[] = \trim($trait, '\\');
 	}
 
 	/**
-	 * @param ICommand | callable $command
+	 * @param \OCP\Command\ICommand | callable $command
 	 */
 	private function runCommand($command) {
 		if ($command instanceof ICommand) {
@@ -87,49 +82,43 @@ class AsyncBus implements IBus {
 	}
 
 	/**
-	 * @param ICommand | callable $command
+	 * @param \OCP\Command\ICommand | callable $command
 	 * @return string
 	 */
 	private function getJobClass($command) {
-		if ($command instanceof Closure) {
+		if ($command instanceof \Closure) {
 			return 'OC\Command\ClosureJob';
-		}
-
-		if (\is_callable($command)) {
+		} elseif (\is_callable($command)) {
 			return 'OC\Command\CallableJob';
-		}
-
-		if ($command instanceof ICommand) {
+		} elseif ($command instanceof ICommand) {
 			return 'OC\Command\CommandJob';
+		} else {
+			throw new \InvalidArgumentException('Invalid command');
 		}
-
-		throw new InvalidArgumentException('Invalid command');
 	}
 
 	/**
-	 * @param ICommand | callable $command
+	 * @param \OCP\Command\ICommand | callable $command
 	 * @return string
 	 */
 	private function serializeCommand($command) {
-		if ($command instanceof Closure) {
-			return serialize(new SerializableClosure($command));
+		if ($command instanceof \Closure) {
+			return \serialize(new SerializableClosure($command));
+		} elseif (\is_callable($command) or $command instanceof ICommand) {
+			return \serialize($command);
+		} else {
+			throw new \InvalidArgumentException('Invalid command');
 		}
-
-		if (\is_callable($command) || $command instanceof ICommand) {
-			return serialize($command);
-		}
-
-		throw new InvalidArgumentException('Invalid command');
 	}
 
 	/**
-	 * @param ICommand | callable $command
+	 * @param \OCP\Command\ICommand | callable $command
 	 * @return bool
 	 */
 	private function canRunAsync($command) {
 		$traits = $this->getTraits($command);
 		foreach ($traits as $trait) {
-			if (array_search($trait, $this->syncTraits) !== false) {
+			if (\array_search($trait, $this->syncTraits) !== false) {
 				return false;
 			}
 		}
@@ -137,14 +126,14 @@ class AsyncBus implements IBus {
 	}
 
 	/**
-	 * @param ICommand | callable $command
+	 * @param \OCP\Command\ICommand | callable $command
 	 * @return string[]
 	 */
 	private function getTraits($command) {
 		if ($command instanceof ICommand) {
-			return class_uses($command);
+			return \class_uses($command);
+		} else {
+			return [];
 		}
-
-		return [];
 	}
 }

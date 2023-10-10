@@ -31,14 +31,12 @@ use OCP\Migration\ISchemaMigration;
 class Version20230120101715 implements ISchemaMigration {
 	public function changeSchema(Schema $schema, array $options) {
 		$prefix = $options['tablePrefix'];
-		$accountsTable = $schema->getTable("{$prefix}accounts");
-			  
-		if (!$accountsTable->hasColumn('creation_time')) {
-			$accountsTable->addColumn('creation_time', Type::INTEGER, [
-					'notnull' => true,
-					'length' => 32,
-					'default' => 0,
-			]);
-		}
+		$accountsTable = $schema->getTable("${prefix}accounts");
+
+		$accountsTable->addColumn('creation_time', Type::INTEGER, [
+				'notnull' => true,
+				'length' => 32,
+				'default' => 0,
+		]);
 	}
 }

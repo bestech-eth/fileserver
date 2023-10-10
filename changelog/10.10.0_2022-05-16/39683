@@ -1,5 +1,0 @@
-Bugfix: Fix files:checksums:verify for a single file
-
-Fixed an issue where running files:checksums:verify for a single file would fail.
-
-https://github.com/owncloud/core/pull/39683

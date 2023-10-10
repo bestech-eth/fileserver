@@ -1,6 +1,0 @@
-Change: fix hiding Last Login column on Users page
-
-The Last Login column on the Users page is now correctly hidden if the setting
-is initially unchecked.
-
-https://github.com/owncloud/core/pull/40771

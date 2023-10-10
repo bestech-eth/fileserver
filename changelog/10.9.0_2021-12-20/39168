@@ -1,4 +1,0 @@
-Bugfix: Return proper error if part file name is too long
-
-https://github.com/owncloud/core/pull/39168
-https://github.com/owncloud/enterprise/issues/4692

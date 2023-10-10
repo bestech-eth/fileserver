@@ -1,5 +1,0 @@
-Change: Add system config to load a different license implementation
-
-The default license implementation can now be replaced.
-
-https://github.com/owncloud/core/pull/37827

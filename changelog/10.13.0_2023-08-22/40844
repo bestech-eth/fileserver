@@ -1,5 +1,0 @@
-Bugfix: verbose command output
-
-Verbose command output of the background:queue:execute is now displayed.
-
-https://github.com/owncloud/core/pull/40844

@@ -209,9 +209,8 @@ class SecurityMiddleware extends Middleware {
 		}
 
 		if ($exception instanceof SecurityException) {
-			$accept_header = $this->request->getHeader('Accept') ?? '';
-			if ($accept_header !== '*/*'
-				&& \stripos($accept_header, 'html') === false
+			if ($this->request->getHeader('Accept') !== '*/*'
+				&& \stripos($this->request->getHeader('Accept'), 'html') === false
 			) {
 				$response = new JSONResponse(
 					['message' => $exception->getMessage()],

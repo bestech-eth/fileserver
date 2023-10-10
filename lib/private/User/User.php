@@ -33,8 +33,6 @@
 namespace OC\User;
 
 use OC\Files\Cache\Storage;
-use OC\Files\ObjectStore\ObjectStoreStorage;
-use OC\Files\View;
 use OC\Group\Manager;
 use OC\Hooks\Emitter;
 use OC_Helper;
@@ -186,8 +184,7 @@ class User implements IUser {
 	}
 
 	/**
-	 * get the display name for the user, if no specific display name is set
-	 * it will fall back to the user id
+	 * get the display name for the user, if no specific display name is set it will fallback to the user id
 	 *
 	 * @return string
 	 */
@@ -288,12 +285,19 @@ class User implements IUser {
 	 *
 	 * @return bool
 	 */
-	public function delete(): bool {
+	public function delete() {
 		if ($this->emitter) {
 			$this->emitter->emit('\OC\User', 'preDelete', [$this]);
 		}
 		// get the home now because it won't return it after user deletion
 		$homePath = $this->getHome();
+		$this->mapper->delete($this->account);
+		$bi = $this->account->getBackendInstance();
+		if ($bi !== null) {
+			$bi->deleteUser($this->account->getUserId());
+		}
+
+		// FIXME: Feels like an hack - suggestions?
 
 		// We have to delete the user from all groups
 		foreach (\OC::$server->getGroupManager()->getUserGroups($this) as $group) {
@@ -307,34 +311,19 @@ class User implements IUser {
 		//Delete external storage or remove user from applicableUsers list
 		\OC::$server->getGlobalStoragesService()->deleteAllForUser($this);
 
-		$view = new View();
-		$fileInfo = $view->getFileInfo("/");
-		if ($fileInfo !== false) {
-			$homeStorage = $fileInfo->getStorage();
-			$isPrimaryObjectStore = $homeStorage->instanceOfStorage(ObjectStoreStorage::class);
-			if ($isPrimaryObjectStore) {
-				/** @var ObjectStoreStorage $homeStorage */
-				/** @phan-suppress-next-line PhanUndeclaredMethod */
-				$homeStorage->removeAllFilesForUser($this);
-			}
-		}
-
 		// Delete user files in /data/
-		\OC_Helper::rmdirr($homePath);
+		if ($homePath !== false) {
+			// FIXME: this operates directly on FS, should use View instead...
+			// also this is not testable/mockable...
+			\OC_Helper::rmdirr($homePath);
+		}
 
 		// Delete the users entry in the storage table
 		Storage::remove('home::' . $this->getUID());
+		Storage::remove('object::user:' . $this->getUID());
 
 		\OC::$server->getCommentsManager()->deleteReferencesOfActor('users', $this->getUID());
 		\OC::$server->getCommentsManager()->deleteReadMarksFromUser($this);
-
-		# finally delete the user and account records
-		# this way the operation can be re-run in case of errors
-		$this->mapper->delete($this->account);
-		$bi = $this->account->getBackendInstance();
-		if ($bi !== null) {
-			$bi->deleteUser($this->account->getUserId());
-		}
 
 		if ($this->emitter) {
 			$this->emitter->emit('\OC\User', 'postDelete', [$this]);

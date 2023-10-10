@@ -1,3 +1,0 @@
-Bugfix: Allow copying file keys when storage has multiple mount points
-
-https://github.com/owncloud/core/pull/39058

@@ -1,4 +1,0 @@
-Security: Prevent stored mail settings password from showing in the webUI
-
-https://github.com/owncloud/core/pull/39833
-https://github.com/owncloud/enterprise/issues/5035

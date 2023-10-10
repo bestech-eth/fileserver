@@ -1,3 +1,0 @@
-Bugfix: Filter sensitive data in log for Session::loginInOwnCloud
-
-https://github.com/owncloud/core/pull/40792

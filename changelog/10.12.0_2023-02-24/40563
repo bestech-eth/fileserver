@@ -1,4 +1,0 @@
-Bugfix: set length of oc_calendars.components to 255
-
-https://github.com/owncloud/core/pull/40563
-https://github.com/owncloud/core/issues/40537

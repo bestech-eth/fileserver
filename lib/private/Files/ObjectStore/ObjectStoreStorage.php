@@ -27,13 +27,11 @@ namespace OC\Files\ObjectStore;
 
 use Icewind\Streams\IteratorDirectory;
 use OC\Files\Cache\CacheEntry;
-use OC\Files\Cache\Storage;
-use OC\User\User;
+use OC\Files\Filesystem;
 use OCP\Files\FileInfo;
 use OCP\Files\NotFoundException;
 use OCP\Files\ObjectStore\IObjectStore;
 use OCP\Files\ObjectStore\IVersionedObjectStorage;
-use OCP\IUser;
 
 class ObjectStoreStorage extends \OC\Files\Storage\Common {
 	/**
@@ -57,7 +55,7 @@ class ObjectStoreStorage extends \OC\Files\Storage\Common {
 	 */
 	protected $availableStorage;
 	/**
-	 * @var User $user
+	 * @var \OC\User\User $user
 	 */
 	protected $user;
 
@@ -85,20 +83,6 @@ class ObjectStoreStorage extends \OC\Files\Storage\Common {
 		if (!$this->is_dir('/')) {
 			$this->mkdir('/');
 		}
-	}
-
-	public function removeAllFilesForUser(IUser $user): void {
-		$storageId = 'object::user:' . $user->getUID();
-		$numericStorageId = Storage::getNumericStorageId($storageId);
-		$sql = 'SELECT `fileid` FROM `*PREFIX*filecache` WHERE `storage` = ?';
-		$result = \OC::$server->getDatabaseConnection()->executeQuery($sql, [$numericStorageId]);
-		while ($row = $result->fetch()) {
-			$fileId = $row['fileid'];
-			$this->objectStore->deleteObject($this->getURN($fileId));
-		}
-
-		# purge db
-		Storage::remove($storageId);
 	}
 
 	/**
@@ -278,9 +262,9 @@ class ObjectStoreStorage extends \OC\Files\Storage\Common {
 		$cacheEntry = $this->getCache()->get($path);
 		if ($cacheEntry instanceof CacheEntry) {
 			return $cacheEntry->getData();
+		} else {
+			return false;
 		}
-
-		return false;
 	}
 
 	/**
